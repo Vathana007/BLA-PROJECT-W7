@@ -10,11 +10,12 @@ class RidePreference {
   final Location arrival;
   final int requestedSeats;
 
-  const RidePreference(
-      {required this.departure,
-      required this.departureDate,
-      required this.arrival,
-      required this.requestedSeats});
+  const RidePreference({
+    required this.departure,
+    required this.departureDate,
+    required this.arrival,
+    required this.requestedSeats,
+  });
 
   @override
   bool operator ==(Object other) {

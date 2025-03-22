@@ -144,6 +144,28 @@ class _RidePrefFormState extends State<RidePrefForm> {
 
   bool get switchVisible => arrival != null && departure != null;
 
+  // Create didUpdatewidget to update the change
+  @override
+  void didUpdateWidget(covariant RidePrefForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Reinitialize the form if the widget's initialPreference has changed
+    if (widget.initialPreference != oldWidget.initialPreference) {
+      if (widget.initialPreference != null) {
+        RidePreference current = widget.initialPreference!;
+        departure = current.departure;
+        arrival = current.arrival;
+        departureDate = current.departureDate;
+        requestedSeats = current.requestedSeats;
+      } else {
+        departure = null;
+        departureDate = DateTime.now();
+        arrival = null;
+        requestedSeats = 1;
+      }
+    }
+  }
+
   // ----------------------------------
   // Build the widgets
   // ----------------------------------
