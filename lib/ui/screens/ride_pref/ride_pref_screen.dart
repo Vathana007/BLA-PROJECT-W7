@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:week_3_blabla_project/ui/providers/async_value.dart';
 import 'package:week_3_blabla_project/ui/providers/ride_pref_provider.dart';
 import '../../../model/ride/ride_pref.dart';
 import '../../theme/theme.dart';
@@ -21,7 +22,6 @@ class RidePrefScreen extends StatelessWidget {
   void onRidePrefSelected(
       BuildContext context, RidePreference newPreference) async {
     // 1 - Update the current preference by provider
-    // RidePrefService.instance.setCurrentPreference(newPreference);
     context.read<RidePreferencesProvider>().setCurrentPreference(newPreference);
 
     // 2 - Navigate to the rides screen (with a buttom to top animation)
@@ -31,18 +31,22 @@ class RidePrefScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    RidePreference? currentRidePreference =
-        context.watch<RidePreferencesProvider>().currentPreference;
-    List<RidePreference> pastPreferences =
-        context.watch<RidePreferencesProvider>().preferencesHistory;
+    final provider = context.watch<RidePreferencesProvider>();
+    final currentRidePreference = provider.currentPreference;
+    final pastPreferences = provider.pastPreferences;
 
-    return Stack(
-      children: [
-        // 1 - Background  Image
-        const BlaBackground(),
+    Widget content;
 
-        // 2 - Foreground content
-        Column(
+    switch (pastPreferences.state) {
+      case AsyncValueState.loading:
+        content = const Center(child: Text('Loading...'));
+        break;
+      case AsyncValueState.error:
+        content = const Center(child: Text('No connection. Try later'));
+        break;
+      case AsyncValueState.success:
+        List<RidePreference> pastPref = pastPreferences.data!;
+        content = Column(
           children: [
             SizedBox(height: BlaSpacings.m),
             Text(
@@ -62,9 +66,9 @@ class RidePrefScreen extends StatelessWidget {
                 children: [
                   // 2.1 Display the Form to input the ride preferences
                   RidePrefForm(
-                    initialPreference: currentRidePreference,
-                    onSubmit: (newPref) => onRidePrefSelected(context, newPref),
-                  ),
+                      initialPreference: currentRidePreference,
+                      onSubmit: (newPreference) =>
+                          onRidePrefSelected(context, newPreference)),
                   SizedBox(height: BlaSpacings.m),
 
                   // 2.2 Optionally display a list of past preferences
@@ -73,11 +77,11 @@ class RidePrefScreen extends StatelessWidget {
                     child: ListView.builder(
                       shrinkWrap: true, // Fix ListView height issue
                       physics: AlwaysScrollableScrollPhysics(),
-                      itemCount: pastPreferences.length,
+                      itemCount: pastPref.length,
                       itemBuilder: (ctx, index) => RidePrefHistoryTile(
-                        ridePref: pastPreferences[index],
+                        ridePref: pastPref[index],
                         onPressed: () =>
-                            onRidePrefSelected(context, pastPreferences[index]),
+                            onRidePrefSelected(context, pastPref[index]),
                       ),
                     ),
                   ),
@@ -85,7 +89,20 @@ class RidePrefScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),
+        );
+        break;
+      case AsyncValueState.empty:
+        content =
+            const Center(child: Text('Fetching data failed, please try again'));
+        break;
+    }
+    return Stack(
+      children: [
+        // 1 - Background Image
+        const BlaBackground(),
+
+        // 2 - Foreground content
+        content,
       ],
     );
   }
